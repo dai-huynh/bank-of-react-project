@@ -19,7 +19,7 @@ class App extends Component {
     // Create and initialize state
     super();
     this.state = {
-      accountBalance: 1234567.89,
+      accountBalance: 0,
       creditList: [],
       debitList: [],
       currentUser: {
@@ -29,11 +29,70 @@ class App extends Component {
     };
   }
 
+  async componentDidMount() {
+    try {
+      let creditResponse = await fetch(
+        "https://johnnylaicode.github.io/api/credits.json"
+      );
+      let creditData = await creditResponse.json();
+
+      creditData = creditData.map((c) => ({
+        ...c,
+        amount: Number(c.amount.toFixed(2)),
+      }));
+
+      let debitResponse = await fetch(
+        "https://johnnylaicode.github.io/api/debits.json"
+      );
+      let debitData = await debitResponse.json();
+
+      debitData = debitData.map((d) => ({
+        ...d,
+        amount: Number(d.amount.toFixed(2)),
+      }));
+
+      let creditsTotal = creditData.reduce(
+        (acc, credit) => acc + credit.amount,
+        0
+      );
+      creditsTotal = Number(creditsTotal.toFixed(2));
+      let debitsTotal = debitData.reduce((acc, debit) => acc + debit.amount, 0);
+      debitsTotal = Number(debitsTotal.toFixed(2));
+      let newBalance = Number((creditsTotal - debitsTotal).toFixed(2));
+
+      this.setState({
+        creditList: creditData,
+        debitList: debitData,
+        accountBalance: newBalance,
+      });
+    } catch (err) {
+      console.error("Error fetching data", err);
+    }
+  }
+
   // Update state's currentUser (userName) after "Log In" button is clicked
   mockLogIn = (logInInfo) => {
     const newUser = { ...this.state.currentUser };
     newUser.userName = logInInfo.userName;
     this.setState({ currentUser: newUser });
+  };
+
+  addCredit = (transaction) => {
+    this.setState((prevState) => ({
+      creditList: [...prevState.creditList, transaction],
+      accountBalance: Number(
+        (prevState.accountBalance + transaction.amount).toFixed(2)
+      ),
+    }));
+  };
+
+  addDebit = (transaction) => {
+    this.setState((prevState) => ({
+      debitList: [...prevState.debitList, transaction],
+      accountBalance: Number(
+        (prevState.accountBalance - transaction.amount).toFixed(2)
+      ),
+    }));
   };
 
   // Create Routes and React elements to be rendered using React components
@@ -51,8 +110,20 @@ class App extends Component {
     const LogInComponent = () => (
       <LogIn user={this.state.currentUser} mockLogIn={this.mockLogIn} />
     );
-    const CreditsComponent = () => <Credits credits={this.state.creditList} />;
-    const DebitsComponent = () => <Debits debits={this.state.debitList} />;
+    const CreditsComponent = () => (
+      <Credits
+        credits={this.state.creditList}
+        addCredit={this.addCredit}
+        balance={this.state.accountBalance}
+      />
+    );
+    const DebitsComponent = () => (
+      <Debits
+        debits={this.state.debitList}
+        addDebit={this.addDebit}
+        balance={this.state.accountBalance}
+      />
+    );
 
     // Important: Include the "basename" in Router, which is needed for deploying the React app to GitHub Pages
     return (
