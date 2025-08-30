@@ -19,7 +19,7 @@ class App extends Component {
     // Create and initialize state
     super();
     this.state = {
-      accountBalance: 1234567.89,
+      accountBalance: 0,
       creditList: [],
       debitList: [],
       currentUser: {
@@ -27,6 +27,47 @@ class App extends Component {
         memberSince: "11/22/99",
       },
     };
+  }
+
+  async componentDidMount() {
+    try {
+      let creditResponse = await fetch(
+        "https://johnnylaicode.github.io/api/credits.json"
+      );
+      let creditData = await creditResponse.json();
+
+      creditData = creditData.map((c) => ({
+        ...c,
+        amount: Number(c.amount.toFixed(2)),
+      }));
+
+      let debitResponse = await fetch(
+        "https://johnnylaicode.github.io/api/debits.json"
+      );
+      let debitData = await debitResponse.json();
+
+      debitData = debitData.map((d) => ({
+        ...d,
+        amount: Number(d.amount.toFixed(2)),
+      }));
+
+      let creditsTotal = creditData.reduce(
+        (acc, credit) => acc + credit.amount,
+        0
+      );
+      creditsTotal = Number(creditsTotal.toFixed(2));
+      let debitsTotal = debitData.reduce((acc, debit) => acc + debit.amount, 0);
+      debitsTotal = Number(debitsTotal.toFixed(2));
+      let newBalance = Number((creditsTotal - debitsTotal).toFixed(2));
+
+      this.setState({
+        creditList: creditData,
+        debitList: debitData,
+        accountBalance: newBalance,
+      });
+    } catch (err) {
+      console.error("Error fetching data", err);
+    }
   }
 
   // Update state's currentUser (userName) after "Log In" button is clicked
