@@ -77,6 +77,7 @@ class App extends Component {
     this.setState({ currentUser: newUser });
   };
 
+  // Calculate balance after each update to credit/debit
   addCredit = (transaction) => {
     this.setState((prevState) => ({
       creditList: [...prevState.creditList, transaction],
