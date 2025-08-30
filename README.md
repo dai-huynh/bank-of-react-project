@@ -1,4 +1,4 @@
-# bank-of-react-starter-code
+# bank-of-react-project
 
 **This is a project for Hunter College: CSCI 39548.**
 This repository is the code for Assignment 3 - Bank of React.
